@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
+utils/fine-tuned-classifier/model.safetensors
+
 # Virtual environments
 venv/
 env/

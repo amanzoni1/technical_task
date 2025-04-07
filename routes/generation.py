@@ -18,6 +18,7 @@ pipeline.load_lora_weights(lora_repo)
 device = torch.device("cuda")
 pipeline.to(device)
 
+############################################
 # Optimization Block: Replace default scheduler and enable GPU-specific optimizations
 # Replace default scheduler with an optimized DPMSolverMultistepScheduler that uses trailing timestep spacing
 # and Karras sigmas to improve image quality with fewer inference steps.
@@ -36,7 +37,7 @@ try:
     pipeline.enable_xformers_memory_efficient_attention()
 except Exception as e:
     print(f"Warning: xformers memory efficient attention could not be enabled: {e}")
-
+############################################
 
 # Request model for input
 class GenerateRequest(BaseModel):
