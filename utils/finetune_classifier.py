@@ -135,8 +135,10 @@ tokenizer = AutoTokenizer.from_pretrained(base_model)
 model = AutoModelForSequenceClassification.from_pretrained(
     base_model,
     num_labels=2,
+    problem_type="single_label_classification",
     id2label={0: "request for visual content creation", 1: "conversational message"},
     label2id={"request for visual content creation": 0, "conversational message": 1},
+    ignore_mismatched_sizes=True,
 )
 
 
