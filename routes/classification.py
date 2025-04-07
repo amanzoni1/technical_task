@@ -20,21 +20,21 @@ class ClassificationResponse(BaseModel):
 classifier = pipeline(
     "zero-shot-classification",
     model="facebook/bart-large-mnli",
-    device=0,  # Use CUDA
+    device=0,
 )
 
 
 @router.post("/", response_model=ClassificationResponse)
 async def classify_prompt(prompt_obj: Prompt):
     prompt_text = prompt_obj.prompt
-    candidate_labels = ["image generation", "casual_conversation"]
+    candidate_labels = ["request for visual content creation", "conversational message"]
 
     try:
         # Classify the prompt using zero-shot classification with a hypothesis template.
         result = classifier(
             prompt_text,
             candidate_labels,
-            hypothesis_template="This text is a request for {}.",
+            hypothesis_template="The user is asking for {}",
         )
         top_label = result["labels"][0]
         top_score = result["scores"][0]
@@ -44,7 +44,7 @@ async def classify_prompt(prompt_obj: Prompt):
         raise HTTPException(status_code=500, detail=f"Classification error: {e}")
 
     # Define a threshold for ambiguity. For example, if the difference is less than 0.1
-    ambiguity_threshold = 0.1
+    ambiguity_threshold = 0.15
     if score_diff < ambiguity_threshold:
         return ClassificationResponse(
             prompt=prompt_text,

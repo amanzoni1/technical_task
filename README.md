@@ -5,5 +5,7 @@ project/
 │ ├── generation.py # Image generation endpoint
 │ ├── training.py # Fine-tuning endpoint
 │ └── classification.py # Prompt classification endpoint
-├── requirements.txt # Dependencies file
+├── utils/
+├── test/
+├── requirements.txt
 └── README.md # Project documentation
