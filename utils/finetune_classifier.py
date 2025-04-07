@@ -161,24 +161,24 @@ def compute_metrics(eval_pred):
     }
 
 
-# Training arguments with overfitting prevention
+# Training arguments
 output_dir = "./fine-tuned-classifier"
 training_args = TrainingArguments(
     output_dir=output_dir,
     learning_rate=2e-5,
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
-    num_train_epochs=10,  # Maximum epochs
-    weight_decay=0.01,  # L2 regularization
+    num_train_epochs=10,
+    weight_decay=0.01,
+    logging_steps=5,
+    save_total_limit=2,
     evaluation_strategy="epoch",
     save_strategy="epoch",
     load_best_model_at_end=True,
-    metric_for_best_model="f1",  # Use F1 score as the metric to monitor
-    greater_is_better=True,
-    logging_steps=5,
+    metric_for_best_model="f1",
 )
 
-# Create trainer with early stopping
+# Create trainer
 trainer = Trainer(
     model=model,
     args=training_args,
