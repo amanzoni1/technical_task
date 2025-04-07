@@ -5,7 +5,6 @@ from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments,
     Trainer,
-    EarlyStoppingCallback,
 )
 from sklearn.metrics import accuracy_score, f1_score
 
@@ -13,9 +12,10 @@ from sklearn.metrics import accuracy_score, f1_score
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-# Base model - this already has the embeddings we need
+# Base model
 base_model = "facebook/bart-large-mnli"
 
+# Minimal training data
 training_data = [
     # Clear requests for visual content (label 0)
     {"text": "can you show me a picture of you on the beach?", "label": 0},
@@ -125,19 +125,16 @@ training_data = [
     },  # Not about creating image
 ]
 
-
 # Convert to dataset and split
 dataset = Dataset.from_list(training_data)
 train_test_split = dataset.train_test_split(test_size=0.25, seed=42)
 
-# Load tokenizer and model (with pre-trained embeddings)
+# Load tokenizer and model
 tokenizer = AutoTokenizer.from_pretrained(base_model)
 model = AutoModelForSequenceClassification.from_pretrained(
     base_model,
     num_labels=2,
     problem_type="single_label_classification",
-    id2label={0: "request for visual content creation", 1: "conversational message"},
-    label2id={"request for visual content creation": 0, "conversational message": 1},
     ignore_mismatched_sizes=True,
 )
 
@@ -150,58 +147,69 @@ def tokenize_function(examples):
 tokenized_train = train_test_split["train"].map(tokenize_function, batched=True)
 tokenized_test = train_test_split["test"].map(tokenize_function, batched=True)
 
-
-# Define evaluation metrics
-def compute_metrics(eval_pred):
-    predictions, labels = eval_pred
-    predictions = predictions.argmax(axis=1)
-    return {
-        "accuracy": accuracy_score(labels, predictions),
-        "f1": f1_score(labels, predictions, average="weighted"),
-    }
-
-
-# Training arguments
+# Define basic training arguments (compatible with older versions)
 output_dir = "./fine-tuned-classifier"
 training_args = TrainingArguments(
     output_dir=output_dir,
     learning_rate=2e-5,
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
-    num_train_epochs=10,
+    num_train_epochs=5,
     weight_decay=0.01,
-    logging_steps=5,
-    save_total_limit=2,
-    evaluation_strategy="epoch",
-    save_strategy="epoch",
-    load_best_model_at_end=True,
-    metric_for_best_model="f1",
+    logging_steps=10,
 )
 
-# Create trainer
+# Basic trainer
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_train,
-    eval_dataset=tokenized_test,
-    compute_metrics=compute_metrics,
-    callbacks=[
-        EarlyStoppingCallback(early_stopping_patience=3)
-    ],  # Stop if no improvement for 3 epochs
 )
 
 # Train the model
 print("Starting training...")
 trainer.train()
 
-# Evaluate
-eval_results = trainer.evaluate()
-print(f"Evaluation results: {eval_results}")
-
 # Save the model
 model.save_pretrained(output_dir)
 tokenizer.save_pretrained(output_dir)
 print(f"Model saved to {output_dir}")
+
+# Manual evaluation
+print("\nEvaluating model on test set...")
+model.eval()
+model.to(device)
+
+# Manually evaluate on test set
+correct = 0
+total = 0
+results = []
+
+for item in tokenized_test:
+    input_text = item["text"]
+    true_label = item["label"]
+
+    inputs = tokenizer(input_text, return_tensors="pt").to(device)
+    with torch.no_grad():
+        outputs = model(**inputs)
+
+    predictions = torch.nn.functional.softmax(outputs.logits, dim=1)
+    predicted_class = torch.argmax(predictions, dim=1).item()
+
+    correct += predicted_class == true_label
+    total += 1
+
+    results.append(
+        {
+            "text": input_text,
+            "true_label": true_label,
+            "predicted": predicted_class,
+            "confidence": predictions[0][predicted_class].item(),
+        }
+    )
+
+accuracy = correct / total
+print(f"Test Accuracy: {accuracy:.4f}")
 
 # Test a few examples
 examples = [
@@ -209,8 +217,8 @@ examples = [
     "see you tomorrow",
     "make an image of you in Paris",
 ]
-print("\nTesting examples:")
 
+print("\nTesting specific examples:")
 for example in examples:
     inputs = tokenizer(example, return_tensors="pt").to(device)
     with torch.no_grad():
