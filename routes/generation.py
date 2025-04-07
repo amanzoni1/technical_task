@@ -1,7 +1,7 @@
 import io
 import base64
 import torch
-from diffusers import DiffusionPipeline
+from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -18,8 +18,27 @@ pipeline.load_lora_weights(lora_repo)
 device = torch.device("cuda")
 pipeline.to(device)
 
+# Optimization Block: Replace default scheduler and enable GPU-specific optimizations
+# Replace default scheduler with an optimized DPMSolverMultistepScheduler that uses trailing timestep spacing
+# and Karras sigmas to improve image quality with fewer inference steps.
+pipeline.scheduler = DPMSolverMultistepScheduler.from_config(
+    pipeline.scheduler.config,
+    algorithm_type="sde-dpmsolver++",
+    timestep_spacing="trailing",
+    use_karras_sigmas=True,
+)
 
-# Request Model for Input
+# Enable attention slicing to reduce memory usage
+pipeline.enable_attention_slicing(slice_size="auto")
+
+# Enable memory efficient attention (if available)
+try:
+    pipeline.enable_xformers_memory_efficient_attention()
+except Exception as e:
+    print(f"Warning: xformers memory efficient attention could not be enabled: {e}")
+
+
+# Request model for input
 class GenerateRequest(BaseModel):
     prompt: str
 
@@ -34,7 +53,8 @@ async def generate_image(request: GenerateRequest):
         # Generate the image
         result = pipeline(
             prompt=full_prompt,
-            num_inference_steps=40,
+            # num_inference_steps=40,
+            num_inference_steps=20,
             width=1024,
             height=1024,
             guidance_scale=6,

@@ -18,9 +18,10 @@ class ClassificationResponse(BaseModel):
 # Assumption that the environment supports CUDA
 # Initialize the zero-shot classification pipeline with GPU acceleration
 classifier = pipeline(
-    "zero-shot-classification",
-    model="facebook/bart-large-mnli",
+    "text-classification",
+    model="utils/fine-tuned-classifier",
     device=0,
+    return_all_scores=True,
 )
 
 

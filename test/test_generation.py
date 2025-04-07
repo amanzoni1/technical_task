@@ -15,11 +15,12 @@ os.makedirs("test_results/images", exist_ok=True)
 
 # Test prompts for image generation
 generation_test_prompts = [
-    "portrait of you with long dark hair against a sunset",
-    "you in a professional business suit in an office",
-    "casual photo of you enjoying a day at the beach",
+    "portrait of a beautiful woman with long dark hair against a sunset",
+    "photo of a beautiful woman in a professional business suit in an office",
+    "casual photo of a beautiful woman enjoying a day at the beach",
+    "close-up portrait of a beautiful woman with a soft smile and elegant makeup",
+    "artistic photo of a beautiful woman in a vintage dress with a scenic background",
 ]
-
 
 def test_generation():
     print("\n===== TESTING IMAGE GENERATION ENDPOINT =====\n")
