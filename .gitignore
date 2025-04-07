@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 
-utils/fine-tuned-classifier/model.safetensors
+utils/fine-tuned-classifier
 
 # Virtual environments
 venv/
