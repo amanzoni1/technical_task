@@ -32,6 +32,11 @@ classification_test_prompts = {
         "picture this scenario",
         "what would it look like if we try something different?",
         "can you make something nice",
+        "let me see how you would handle this situation",
+        "can you visualize the problem for me?",
+        "I'd like to see your approach to this",
+        "show me your best side",
+        "imagine you standing next to me",
     ],
 }
 

@@ -1,0 +1,98 @@
+===== TESTING CLASSIFICATION ENDPOINT =====
+
+
+Testing Image Requests prompts:
+  • 'can you show me a picture of you on the beach?'
+    → Classified as: request for visual content creation (score: 0.9998)
+    → Message: Classification successful.
+    → Response time: 0.30s
+  • 'generate an image of you in a red dress'
+    → Classified as: request for visual content creation (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'I'd like to see you in a kitchen setting'
+    → Classified as: request for visual content creation (score: 0.9998)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'can I see you in a winter outfit?'
+    → Classified as: request for visual content creation (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'picture yourself at the beach'
+    → Classified as: request for visual content creation (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+
+Testing Conversation prompts:
+  • 'how was your day?'
+    → Classified as: conversational message (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'what's your favorite movie?'
+    → Classified as: conversational message (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'I think the project deadline is too tight'
+    → Classified as: conversational message (score: 0.9995)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'tell me a funny story'
+    → Classified as: conversational message (score: 0.9996)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'see you on Monday'
+    → Classified as: conversational message (score: 0.9977)
+    → Message: Classification successful.
+    → Response time: 0.02s
+
+Testing Ambiguous prompts:
+  • 'can I see you in the kitchen?'
+    → Classified as: request for visual content creation (score: 0.9957)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'show me what you think'
+    → Classified as: conversational message (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'picture this scenario'
+    → Classified as: conversational message (score: 0.9972)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'what would it look like if we try something different?'
+    → Classified as: conversational message (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'can you make something nice'
+    → Classified as: conversational message (score: 0.9980)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'let me see how you would handle this situation'
+    → Classified as: conversational message (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'can you visualize the problem for me?'
+    → Classified as: conversational message (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'I'd like to see your approach to this'
+    → Classified as: conversational message (score: 0.9999)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'show me your best side'
+    → Classified as: conversational message (score: 0.9941)
+    → Message: Classification successful.
+    → Response time: 0.02s
+  • 'imagine you standing next to me'
+    → Classified as: request for visual content creation (score: 0.9908)
+    → Message: Classification successful.
+    → Response time: 0.02s
+
+Classification test results saved to test_results/classification/results.json
+
+===== CLASSIFICATION TEST SUMMARY =====
+
+Classification Results:
+  • Image Requests: 5/5 correct (100.0%)
+  • Conversation: 5/5 correct (100.0%)
+  • Ambiguous: 10 tested (correctness not measured)
+  • Average response time: 0.03s

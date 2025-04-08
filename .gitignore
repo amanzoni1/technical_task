@@ -4,7 +4,11 @@ __pycache__/
 *$py.class
 
 
-utils/fine-tuned-classifier
+routes/training*
+utils/training*
+test/generation/images
+test/generation/result*
+test/generation/test_generation.txt
 
 # Virtual environments
 venv/

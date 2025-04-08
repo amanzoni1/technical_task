@@ -1,0 +1,162 @@
+[
+  {
+    "category": "Image Requests",
+    "prompt": "can you show me a picture of you on the beach?",
+    "classification": "request for visual content creation",
+    "score": 0.9998297691345215,
+    "message": "Classification successful.",
+    "response_time": 0.2979276180267334
+  },
+  {
+    "category": "Image Requests",
+    "prompt": "generate an image of you in a red dress",
+    "classification": "request for visual content creation",
+    "score": 0.9999217987060547,
+    "message": "Classification successful.",
+    "response_time": 0.020100831985473633
+  },
+  {
+    "category": "Image Requests",
+    "prompt": "I'd like to see you in a kitchen setting",
+    "classification": "request for visual content creation",
+    "score": 0.9998360872268677,
+    "message": "Classification successful.",
+    "response_time": 0.021509647369384766
+  },
+  {
+    "category": "Image Requests",
+    "prompt": "can I see you in a winter outfit?",
+    "classification": "request for visual content creation",
+    "score": 0.9998946189880371,
+    "message": "Classification successful.",
+    "response_time": 0.02213573455810547
+  },
+  {
+    "category": "Image Requests",
+    "prompt": "picture yourself at the beach",
+    "classification": "request for visual content creation",
+    "score": 0.9998897314071655,
+    "message": "Classification successful.",
+    "response_time": 0.021306991577148438
+  },
+  {
+    "category": "Conversation",
+    "prompt": "how was your day?",
+    "classification": "conversational message",
+    "score": 0.9998865127563477,
+    "message": "Classification successful.",
+    "response_time": 0.020280122756958008
+  },
+  {
+    "category": "Conversation",
+    "prompt": "what's your favorite movie?",
+    "classification": "conversational message",
+    "score": 0.999910831451416,
+    "message": "Classification successful.",
+    "response_time": 0.01958298683166504
+  },
+  {
+    "category": "Conversation",
+    "prompt": "I think the project deadline is too tight",
+    "classification": "conversational message",
+    "score": 0.9994869232177734,
+    "message": "Classification successful.",
+    "response_time": 0.01950836181640625
+  },
+  {
+    "category": "Conversation",
+    "prompt": "tell me a funny story",
+    "classification": "conversational message",
+    "score": 0.9995837807655334,
+    "message": "Classification successful.",
+    "response_time": 0.018695831298828125
+  },
+  {
+    "category": "Conversation",
+    "prompt": "see you on Monday",
+    "classification": "conversational message",
+    "score": 0.9976525902748108,
+    "message": "Classification successful.",
+    "response_time": 0.01884603500366211
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "can I see you in the kitchen?",
+    "classification": "request for visual content creation",
+    "score": 0.9957030415534973,
+    "message": "Classification successful.",
+    "response_time": 0.018833637237548828
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "show me what you think",
+    "classification": "conversational message",
+    "score": 0.9998548030853271,
+    "message": "Classification successful.",
+    "response_time": 0.018277406692504883
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "picture this scenario",
+    "classification": "conversational message",
+    "score": 0.9971910119056702,
+    "message": "Classification successful.",
+    "response_time": 0.01853799819946289
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "what would it look like if we try something different?",
+    "classification": "conversational message",
+    "score": 0.9999164342880249,
+    "message": "Classification successful.",
+    "response_time": 0.019008398056030273
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "can you make something nice",
+    "classification": "conversational message",
+    "score": 0.9979714751243591,
+    "message": "Classification successful.",
+    "response_time": 0.018749237060546875
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "let me see how you would handle this situation",
+    "classification": "conversational message",
+    "score": 0.9999419450759888,
+    "message": "Classification successful.",
+    "response_time": 0.018710851669311523
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "can you visualize the problem for me?",
+    "classification": "conversational message",
+    "score": 0.999921441078186,
+    "message": "Classification successful.",
+    "response_time": 0.01886153221130371
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "I'd like to see your approach to this",
+    "classification": "conversational message",
+    "score": 0.9999313354492188,
+    "message": "Classification successful.",
+    "response_time": 0.018323659896850586
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "show me your best side",
+    "classification": "conversational message",
+    "score": 0.9941258430480957,
+    "message": "Classification successful.",
+    "response_time": 0.017943382263183594
+  },
+  {
+    "category": "Ambiguous",
+    "prompt": "imagine you standing next to me",
+    "classification": "request for visual content creation",
+    "score": 0.9908185601234436,
+    "message": "Classification successful.",
+    "response_time": 0.018657922744750977
+  }
+]

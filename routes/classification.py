@@ -16,48 +16,44 @@ class ClassificationResponse(BaseModel):
     message: str
 
 # Assumption that the environment supports CUDA
-# Initialize the zero-shot classification pipeline with GPU acceleration
+#  Initialize the text-classification pipeline using the fine-tuned model
 classifier = pipeline(
-    # "text-classification",
-    # model="utils/fine-tuned-classifier",
-    "zero-shot-classification",
-    model="facebook/bart-large-mnli",
+    "text-classification",
+    model="AManzoni/prompt-classifier",
     device=0,
 )
 
+# Mapping to convert the raw model output to human-readable labels.
+id2label = {
+    "0": "request for visual content creation",
+    "1": "conversational message",
+    "LABEL_0": "request for visual content creation",
+    "LABEL_1": "conversational message",
+}
 
 @router.post("/", response_model=ClassificationResponse)
 async def classify_prompt(prompt_obj: Prompt):
     prompt_text = prompt_obj.prompt
-    candidate_labels = ["request for visual content creation", "conversational message"]
-
     try:
-        # Classify the prompt using zero-shot classification with a hypothesis template.
-        result = classifier(
-            prompt_text,
-            candidate_labels,
-            hypothesis_template="The user is asking for {}",
-        )
-        top_label = result["labels"][0]
-        top_score = result["scores"][0]
-        second_score = result["scores"][1]
-        score_diff = top_score - second_score
+        # Get the classification result.
+        results = classifier(prompt_text)
+        if not results or not isinstance(results, list) or not results[0]:
+            raise ValueError("No output returned by the classifier.")
+
+        top_result = results[0]
+        top_label = top_result["label"]
+        top_score = top_result["score"]
+
+        # Map the model output to a human-readable label.
+        readable_label = id2label.get(top_label, top_label)
+        message = "Classification successful."
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Classification error: {e}")
 
-    # Define a threshold for ambiguity. For example, if the difference is less than 0.1
-    ambiguity_threshold = 0.15
-    if score_diff < ambiguity_threshold:
-        return ClassificationResponse(
-            prompt=prompt_text,
-            label=top_label,
-            score=top_score,
-            message="Sorry, I'm not sure I've properly understood. Could you please reformulate your question?",
-        )
-    else:
-        return ClassificationResponse(
-            prompt=prompt_text,
-            label=top_label,
-            score=top_score,
-            message="Classification successful.",
-        )
+    return ClassificationResponse(
+        prompt=prompt_text,
+        label=readable_label,
+        score=top_score,
+        message=message,
+    )

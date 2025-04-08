@@ -1,4 +1,5 @@
 import torch
+import json
 from datasets import Dataset
 from transformers import (
     AutoTokenizer,
@@ -15,7 +16,11 @@ print(f"Using device: {device}")
 # Base model
 base_model = "facebook/bart-large-mnli"
 
-# Minimal training data
+# Define the label mappings explicitly
+id2label = {0: "request for visual content creation", 1: "conversational message"}
+label2id = {"request for visual content creation": 0, "conversational message": 1}
+
+# Training data
 training_data = [
     # Clear requests for visual content (label 0)
     {"text": "can you show me a picture of you on the beach?", "label": 0},
@@ -69,8 +74,6 @@ training_data = [
     {"text": "I'm planning my vacation", "label": 1},
     {"text": "what's your favorite food?", "label": 1},
     {"text": "do you think I should get a dog?", "label": 1},
-    # Ambiguous examples that could be interpreted either way,
-    # but have been categorized based on most likely intention
     # Ambiguous but more likely visual content (label 0)
     {"text": "can I see you in a red dress?", "label": 0},
     {"text": "show me what you look like", "label": 0},
@@ -99,42 +102,34 @@ training_data = [
     {"text": "help me see this from your point of view", "label": 1},
     {"text": "can you make sense of these instructions?", "label": 1},
     {"text": "what would it look like if we try something different?", "label": 1},
-    # Additional edge cases that might be confusing
-    {
-        "text": "can you picture a world without poverty?",
-        "label": 1,
-    },  # Metaphorical "picture"
-    {"text": "I see you're good at math", "label": 1},  # "see" as understand
-    {"text": "show me how this recipe works", "label": 1},  # "show" as explain
-    {
-        "text": "can you create a story about dragons?",
-        "label": 1,
-    },  # "create" but not visual
-    {
-        "text": "draw your own conclusions from this data",
-        "label": 1,
-    },  # Metaphorical "draw"
-    {
-        "text": "I'm trying to visualize the solution",
-        "label": 1,
-    },  # Metaphorical visualization
-    {"text": "can you see yourself doing this job?", "label": 1},  # Hypothetical "see"
-    {
-        "text": "make yourself comfortable and let's chat",
-        "label": 1,
-    },  # Not about creating image
+    {"text": "can you picture a world without poverty?", "label": 1},
+    {"text": "I see you're good at math", "label": 1},
+    {"text": "show me how this recipe works", "label": 1},
+    {"text": "can you create a story about dragons?", "label": 1},
+    {"text": "draw your own conclusions from this data", "label": 1},
+    {"text": "I'm trying to visualize the solution", "label": 1},
+    {"text": "can you see yourself doing this job?", "label": 1},
+    {"text": "make yourself comfortable and let's chat", "label": 1},
 ]
 
 # Convert to dataset and split
 dataset = Dataset.from_list(training_data)
 train_test_split = dataset.train_test_split(test_size=0.25, seed=42)
 
-# Load tokenizer and model
+# Print dataset statistics
+print(f"Training examples: {len(train_test_split['train'])}")
+print(f"Testing examples: {len(train_test_split['test'])}")
+
+# Load tokenizer
 tokenizer = AutoTokenizer.from_pretrained(base_model)
+
+# Load model with explicit label mappings
 model = AutoModelForSequenceClassification.from_pretrained(
     base_model,
     num_labels=2,
     problem_type="single_label_classification",
+    id2label=id2label,
+    label2id=label2id,
     ignore_mismatched_sizes=True,
 )
 
@@ -147,69 +142,67 @@ def tokenize_function(examples):
 tokenized_train = train_test_split["train"].map(tokenize_function, batched=True)
 tokenized_test = train_test_split["test"].map(tokenize_function, batched=True)
 
-# Define basic training arguments (compatible with older versions)
+
+# Define evaluation function
+def compute_metrics(eval_pred):
+    if isinstance(eval_pred[0], tuple):
+        # If logits is a tuple, use the first element
+        logits = eval_pred[0][0]  # Extract from nested tuple
+    else:
+        # Otherwise, use it directly
+        logits = eval_pred[0]
+
+    labels = eval_pred[1]
+
+    # Get the predicted class from the logits
+    predictions = logits.argmax(axis=1)
+
+    return {
+        "accuracy": accuracy_score(labels, predictions),
+        "f1": f1_score(labels, predictions, average="weighted"),
+    }
+
+
+# Training arguments
 output_dir = "./fine-tuned-classifier"
 training_args = TrainingArguments(
     output_dir=output_dir,
     learning_rate=2e-5,
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
-    num_train_epochs=5,
+    num_train_epochs=4,
     weight_decay=0.01,
-    logging_steps=10,
+    logging_steps=4,
+    save_total_limit=2,
 )
 
-# Basic trainer
+# Create trainer with evaluation
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_train,
+    eval_dataset=tokenized_test,
+    compute_metrics=compute_metrics,
 )
 
 # Train the model
 print("Starting training...")
 trainer.train()
 
+# Evaluate the model
+print("\nEvaluating on test set...")
+eval_results = trainer.evaluate()
+print(f"Evaluation results: {eval_results}")
+
 # Save the model
 model.save_pretrained(output_dir)
 tokenizer.save_pretrained(output_dir)
 print(f"Model saved to {output_dir}")
 
-# Manual evaluation
-print("\nEvaluating model on test set...")
-model.eval()
-model.to(device)
-
-# Manually evaluate on test set
-correct = 0
-total = 0
-results = []
-
-for item in tokenized_test:
-    input_text = item["text"]
-    true_label = item["label"]
-
-    inputs = tokenizer(input_text, return_tensors="pt").to(device)
-    with torch.no_grad():
-        outputs = model(**inputs)
-
-    predictions = torch.nn.functional.softmax(outputs.logits, dim=1)
-    predicted_class = torch.argmax(predictions, dim=1).item()
-
-    correct += predicted_class == true_label
-    total += 1
-
-    results.append(
-        {
-            "text": input_text,
-            "true_label": true_label,
-            "predicted": predicted_class,
-            "confidence": predictions[0][predicted_class].item(),
-        }
-    )
-
-accuracy = correct / total
-print(f"Test Accuracy: {accuracy:.4f}")
+# Save label mappings to a file
+with open(f"{output_dir}/label_mapping.json", "w") as f:
+    json.dump({"id2label": id2label, "label2id": label2id}, f)
+print(f"Label mappings saved to {output_dir}/label_mapping.json")
 
 # Test a few examples
 examples = [
@@ -219,6 +212,7 @@ examples = [
 ]
 
 print("\nTesting specific examples:")
+model.eval()
 for example in examples:
     inputs = tokenizer(example, return_tensors="pt").to(device)
     with torch.no_grad():
@@ -229,5 +223,5 @@ for example in examples:
     confidence = probabilities[0][predicted_class].item()
 
     print(f"Text: '{example}'")
-    print(f"Prediction: {'visual content' if predicted_class == 0 else 'conversation'}")
+    print(f"Prediction: {id2label[predicted_class]} (class {predicted_class})")
     print(f"Confidence: {confidence:.4f}\n")
