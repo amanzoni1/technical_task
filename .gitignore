@@ -3,9 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-
-routes/training_transformers.py
-utils/training_utils.py
 test/generation/images
 test/generation/result*
 test/generation/test_generation.txt
