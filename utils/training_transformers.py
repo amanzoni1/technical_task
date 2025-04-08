@@ -1,14 +1,18 @@
 import os
 import zipfile
 import torch
-from diffusers import DiffusionPipeline, UNet2DConditionModel, DDPMScheduler
+from diffusers import (
+    DiffusionPipeline,
+    FluxTransformer2DModel,  # Use FluxTransformer2DModel from Flux.
+    FlowMatchEulerDiscreteScheduler,
+)
 from transformers import CLIPTokenizer, CLIPTextModel
 from peft import LoraConfig, get_peft_model
 from PIL import Image
+import bitsandbytes as bnb
 import torch.nn.functional as F
 from datasets import Dataset
 import json
-from tqdm import tqdm
 import glob
 
 
@@ -16,10 +20,9 @@ import glob
 # Configuration class for training hyperparameters
 # ------------------------------------------------------------------
 class TrainingConfig:
-
     def __init__(
         self,
-        base_model_id="black-forest-labs/FLUX.1-dev",
+        base_model_id="black-forest-labs/FLUX.1-dev",  # Using Flux dev repository.
         lora_model_id="prithivMLmods/SD3.5-Large-Photorealistic-LoRA",
         prompt_keywords=None,
         caption_prefix="",
@@ -59,22 +62,12 @@ def prepare_dataset(
     """
     Extracts the dataset zip and prepares the dataset for training.
 
-    Args:
-        dataset_zip_path (str): Path to the zipped dataset.
-        extraction_dir (str): Directory where the dataset will be extracted.
-        keywords (list): Default keywords used for captions if no individual caption exists.
-        resolution (int): Target resolution for images.
-        caption_prefix (str): Optional prefix for captions.
-
-    Returns:
-        dict: A dictionary with keys "image", "text", and "pixel_values" representing the dataset.
+    Returns a dict with keys "image", "text", and "pixel_values".
     """
-    # Extract the zip file
     os.makedirs(extraction_dir, exist_ok=True)
     with zipfile.ZipFile(dataset_zip_path, "r") as zip_ref:
         zip_ref.extractall(extraction_dir)
 
-    # Find image files
     image_files = []
     for ext in ["jpg", "jpeg", "png"]:
         image_files.extend(
@@ -89,7 +82,6 @@ def prepare_dataset(
     if not image_files:
         raise ValueError("No image files found in the dataset")
 
-    # Create a default caption using keywords
     default_caption = ", ".join(keywords)
     if caption_prefix:
         default_caption = f"{caption_prefix}, {default_caption}"
@@ -97,7 +89,6 @@ def prepare_dataset(
     images = []
     captions = []
     pixel_values = []
-
     for img_path in image_files:
         caption_file = os.path.splitext(img_path)[0] + ".txt"
         if os.path.exists(caption_file):
@@ -114,24 +105,22 @@ def prepare_dataset(
             print(f"Error loading image {img_path}: {e}")
             continue
 
-        # Resize the image to the target resolution
+        # Resize the image
         img = img.resize((resolution, resolution))
-
         # Convert image to a tensor and normalize to [-1, 1]
         tensor = torch.tensor(list(img.getdata()), dtype=torch.float32).reshape(
             resolution, resolution, 3
         )
-        tensor = (
-            tensor / 127.5
-        ) - 1.0  # Normalize assuming original pixel values are [0, 255]
-        # Permute dimensions to (C, H, W)
-        tensor = tensor.permute(2, 0, 1)
+        tensor = (tensor / 127.5) - 1.0  # Normalize
+        tensor = tensor.permute(2, 0, 1)  # (C, H, W)
+        # Force conversion to tensor (should already be one)
+        tensor = torch.tensor(tensor, dtype=torch.float32)
 
         images.append(img)
         captions.append(caption)
         pixel_values.append(tensor)
 
-    # Save metadata for debugging
+    # Save metadata for debugging.
     meta_path = os.path.join(extraction_dir, "metadata.jsonl")
     with open(meta_path, "w") as f:
         for img_path in image_files:
@@ -157,12 +146,24 @@ def update_progress(output_dir, step, total_steps, status, metrics=None):
 
 
 # ------------------------------------------------------------------
-# Utility: Save a checkpoint for the UNet (LoRA weights)
+# Utility: Save a checkpoint for the diffusion model (Flux LoRA weights)
 # ------------------------------------------------------------------
-def save_checkpoint(unet, output_dir, step, final=False):
+def save_checkpoint(model, output_dir, step, final=False):
     save_dir = output_dir if final else os.path.join(output_dir, f"checkpoint-{step}")
     os.makedirs(save_dir, exist_ok=True)
-    unet.save_pretrained(os.path.join(save_dir, "unet"))
+    model.save_pretrained(os.path.join(save_dir, "flux_model"))
+
+
+# ------------------------------------------------------------------
+# Custom collate function to ensure pixel_values are tensors.
+# ------------------------------------------------------------------
+def custom_collate_fn(batch):
+    pixel_values = [
+        torch.tensor(item["pixel_values"], dtype=torch.float32) for item in batch
+    ]
+    pixel_values = torch.stack(pixel_values)
+    texts = [item["text"] for item in batch]
+    return {"pixel_values": pixel_values, "text": texts}
 
 
 # ------------------------------------------------------------------
@@ -170,7 +171,11 @@ def save_checkpoint(unet, output_dir, step, final=False):
 # ------------------------------------------------------------------
 def train_lora(dataset_zip_path, output_dir, config):
     try:
-        # Prepare dataset: extract zip and build data dict.
+        import gc
+
+        torch.cuda.empty_cache()
+        gc.collect()
+
         extraction_dir = os.path.dirname(dataset_zip_path)
         dataset_dict = prepare_dataset(
             dataset_zip_path,
@@ -179,65 +184,83 @@ def train_lora(dataset_zip_path, output_dir, config):
             resolution=config.resolution,
             caption_prefix=config.caption_prefix,
         )
+        # Ensure pixel_values are tensors
+        dataset_dict["pixel_values"] = [
+            torch.tensor(x, dtype=torch.float32) for x in dataset_dict["pixel_values"]
+        ]
         dataset = Dataset.from_dict(dataset_dict)
+        if "image" in dataset.column_names:
+            dataset = dataset.remove_columns(["image"])
 
-        # Load base model components
+        # Load base model components from the Flux repository.
         tokenizer = CLIPTokenizer.from_pretrained(
             config.base_model_id, subfolder="tokenizer"
         )
         text_encoder = CLIPTextModel.from_pretrained(
             config.base_model_id, subfolder="text_encoder"
         )
-        unet = UNet2DConditionModel.from_pretrained(
-            config.base_model_id, subfolder="unet"
+        flux_model = FluxTransformer2DModel.from_pretrained(
+            config.base_model_id, subfolder="transformer"
         )
-        noise_scheduler = DDPMScheduler.from_pretrained(
+        noise_scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained(
             config.base_model_id, subfolder="scheduler"
         )
 
         # Optionally, load from an existing LoRA adapter.
-        # If you plan to train a new adapter from scratch, leave lora_model_id as None.
         if config.lora_model_id:
             pipeline = DiffusionPipeline.from_pretrained(
                 config.base_model_id, torch_dtype=torch.float16
             )
             pipeline.load_lora_weights(config.lora_model_id)
-            unet = pipeline.unet
+            flux_model = pipeline.unet  # or pipeline.transformer, adjust as needed.
             if config.train_text_encoder:
                 text_encoder = pipeline.text_encoder
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # Configure and apply LoRA to UNet
+        # Configure and apply LoRA to the Flux model.
         lora_config = LoraConfig(
             r=config.lora_rank,
             lora_alpha=config.lora_rank,
-            target_modules=["to_q", "to_k", "to_v", "to_out.0"],
+            target_modules=[
+                "to_q",
+                "to_k",
+                "to_v",
+                "to_out.0",
+            ],  # Adjust based on Flux architecture.
             lora_dropout=0.1,
         )
-        unet = get_peft_model(unet, lora_config)
+        flux_model = get_peft_model(flux_model, lora_config)
         text_encoder.requires_grad_(False)
 
-        # Setup training dataloader
         train_dataloader = torch.utils.data.DataLoader(
-            dataset, batch_size=config.batch_size, shuffle=True
+            dataset,
+            batch_size=config.batch_size,
+            shuffle=True,
+            collate_fn=custom_collate_fn,
         )
-        unet = unet.to(device)
+        flux_model = flux_model.to(device)
         text_encoder = text_encoder.to(device)
-        optimizer = torch.optim.AdamW(unet.parameters(), lr=config.learning_rate)
+        optimizer = bnb.optim.AdamW8bit(
+            flux_model.parameters(),
+            lr=config.learning_rate,
+            betas=(0.9, 0.999),
+            weight_decay=0.01,
+        )
 
         update_progress(output_dir, 0, config.max_train_steps, "training")
-        unet.train()
+        flux_model.train()
         global_step = 0
+
+        flux_model = flux_model.to(dtype=torch.float16)
 
         for epoch in range(config.num_epochs):
             for batch in train_dataloader:
                 if global_step >= config.max_train_steps:
                     break
 
-                # Use precomputed tensor values from the dataset
-                pixel_values = torch.stack(batch["pixel_values"]).to(device)
-
+                # Cast pixel_values to FP16 here.
+                pixel_values = batch["pixel_values"].to(device, dtype=torch.float16)
                 text_inputs = tokenizer(
                     batch["text"],
                     padding="max_length",
@@ -246,7 +269,10 @@ def train_lora(dataset_zip_path, output_dir, config):
                     return_tensors="pt",
                 ).to(device)
                 with torch.no_grad():
-                    encoder_hidden_states = text_encoder(text_inputs.input_ids)[0]
+                    # Cast text encoder output to FP16.
+                    encoder_hidden_states = text_encoder(text_inputs.input_ids)[0].to(
+                        device, dtype=torch.float16
+                    )
 
                 batch_size = pixel_values.size(0)
                 latents = torch.randn(
@@ -261,8 +287,11 @@ def train_lora(dataset_zip_path, output_dir, config):
                     (batch_size,),
                     device=device,
                 )
-                noisy_latents = noise_scheduler.add_noise(latents, noise, timesteps)
-                noise_pred = unet(
+                sigma_t = noise_scheduler._sigma(timesteps)[:, None, None, None]
+                noisy_latents = latents + noise * sigma_t
+
+                # Forward pass using the Flux model.
+                noise_pred = flux_model(
                     noisy_latents, timesteps, encoder_hidden_states
                 ).sample
                 loss = F.mse_loss(noise_pred, noise)
@@ -280,15 +309,15 @@ def train_lora(dataset_zip_path, output_dir, config):
                 )
 
                 if global_step % 100 == 0:
-                    save_checkpoint(unet, output_dir, global_step)
+                    save_checkpoint(flux_model, output_dir, global_step)
 
         update_progress(
             output_dir, config.max_train_steps, config.max_train_steps, "saving"
         )
-        save_checkpoint(unet, output_dir, global_step, final=True)
+        save_checkpoint(flux_model, output_dir, global_step, final=True)
 
         with open(os.path.join(output_dir, "README.md"), "w") as f:
-            f.write(f"# Fine-tuned LoRA Adapter\n\n")
+            f.write(f"# Fine-tuned Flux LoRA Adapter\n\n")
             f.write(f"Base model: {config.base_model_id}\n")
             if config.lora_model_id:
                 f.write(f"Starting checkpoint: {config.lora_model_id}\n")
@@ -319,11 +348,11 @@ def train_lora_model(dataset_dir, output_dir, keywords):
     Assumes the uploaded zip file is stored as `dataset.zip` in dataset_dir.
     """
     config = TrainingConfig(
-        base_model_id="black-forest-labs/FLUX.1-dev",  # Change if needed for your Flux model
-        lora_model_id=None,  # Set to None to train a new adapter from scratch, or provide a valid adapter ID.
+        base_model_id="black-forest-labs/FLUX.1-dev",  # Using Flux dev repository.
+        lora_model_id=None,  # Train a new adapter from scratch.
         prompt_keywords=keywords,
         caption_prefix="",
-        resolution=512,
+        resolution=256,
         batch_size=1,
         gradient_accumulation_steps=1,
         max_train_steps=5,
