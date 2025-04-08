@@ -4,11 +4,12 @@ __pycache__/
 *$py.class
 
 
-routes/training*
-utils/training*
+routes/training_transformers.py
+utils/training_utils.py
 test/generation/images
 test/generation/result*
 test/generation/test_generation.txt
+reqo.txt
 
 # Virtual environments
 venv/

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes import generation, training, classification
+from routes import generation, classification, training
 
 app = FastAPI(title="LoRA Image Generation & Training API")
 
