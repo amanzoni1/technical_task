@@ -12,11 +12,14 @@ from tqdm import tqdm
 import glob
 
 
+# ------------------------------------------------------------------
 # Configuration class for training hyperparameters
+# ------------------------------------------------------------------
 class TrainingConfig:
+
     def __init__(
         self,
-        base_model_id="runwayml/stable-diffusion-v1-5",
+        base_model_id="black-forest-labs/FLUX.1-dev",
         lora_model_id="prithivMLmods/SD3.5-Large-Photorealistic-LoRA",
         prompt_keywords=None,
         caption_prefix="",
@@ -47,7 +50,9 @@ class TrainingConfig:
         self.train_text_encoder = train_text_encoder
 
 
+# ------------------------------------------------------------------
 # Step 1: Extract and prepare the dataset
+# ------------------------------------------------------------------
 def prepare_dataset(
     dataset_zip_path, extraction_dir, keywords, resolution=512, caption_prefix=""
 ):
@@ -126,7 +131,7 @@ def prepare_dataset(
         captions.append(caption)
         pixel_values.append(tensor)
 
-    # save metadata for debugging.
+    # Save metadata for debugging
     meta_path = os.path.join(extraction_dir, "metadata.jsonl")
     with open(meta_path, "w") as f:
         for img_path in image_files:
@@ -134,11 +139,12 @@ def prepare_dataset(
             entry = {"file_name": rel_path, "text": default_caption}
             f.write(json.dumps(entry) + "\n")
 
-    # Return a dictionary that includes the already-transformed pixel tensors.
     return {"image": images, "text": captions, "pixel_values": pixel_values}
 
 
-# Function to update progress (writes a JSON file)
+# ------------------------------------------------------------------
+# Utility: Update progress (writes a JSON file)
+# ------------------------------------------------------------------
 def update_progress(output_dir, step, total_steps, status, metrics=None):
     data = {
         "step": step,
@@ -150,14 +156,18 @@ def update_progress(output_dir, step, total_steps, status, metrics=None):
         json.dump(data, f)
 
 
-# Function to save a checkpoint for the UNet (LoRA weights)
+# ------------------------------------------------------------------
+# Utility: Save a checkpoint for the UNet (LoRA weights)
+# ------------------------------------------------------------------
 def save_checkpoint(unet, output_dir, step, final=False):
     save_dir = output_dir if final else os.path.join(output_dir, f"checkpoint-{step}")
     os.makedirs(save_dir, exist_ok=True)
     unet.save_pretrained(os.path.join(save_dir, "unet"))
 
 
-# main training function
+# ------------------------------------------------------------------
+# Main training function
+# ------------------------------------------------------------------
 def train_lora(dataset_zip_path, output_dir, config):
     try:
         # Prepare dataset: extract zip and build data dict.
@@ -185,7 +195,8 @@ def train_lora(dataset_zip_path, output_dir, config):
             config.base_model_id, subfolder="scheduler"
         )
 
-        # Optionally, load from an existing LoRA adapter
+        # Optionally, load from an existing LoRA adapter.
+        # If you plan to train a new adapter from scratch, leave lora_model_id as None.
         if config.lora_model_id:
             pipeline = DiffusionPipeline.from_pretrained(
                 config.base_model_id, torch_dtype=torch.float16
@@ -201,7 +212,7 @@ def train_lora(dataset_zip_path, output_dir, config):
         lora_config = LoraConfig(
             r=config.lora_rank,
             lora_alpha=config.lora_rank,
-            target_modules=["q_proj", "k_proj", "v_proj", "out_proj"],
+            target_modules=["to_q", "to_k", "to_v", "to_out.0"],
             lora_dropout=0.1,
         )
         unet = get_peft_model(unet, lora_config)
@@ -224,6 +235,7 @@ def train_lora(dataset_zip_path, output_dir, config):
                 if global_step >= config.max_train_steps:
                     break
 
+                # Use precomputed tensor values from the dataset
                 pixel_values = torch.stack(batch["pixel_values"]).to(device)
 
                 text_inputs = tokenizer(
@@ -298,15 +310,17 @@ def train_lora(dataset_zip_path, output_dir, config):
         return False
 
 
+# ------------------------------------------------------------------
 # Wrapper function to be called by the API route
+# ------------------------------------------------------------------
 def train_lora_model(dataset_dir, output_dir, keywords):
     """
     Wrapper function that creates a default training configuration and starts training.
     Assumes the uploaded zip file is stored as `dataset.zip` in dataset_dir.
     """
     config = TrainingConfig(
-        base_model_id="black-forest-labs/FLUX.1-dev",
-        lora_model_id="strangerzonehf/Flux-Super-Realism-LoRA",
+        base_model_id="black-forest-labs/FLUX.1-dev",  # Change if needed for your Flux model
+        lora_model_id=None,  # Set to None to train a new adapter from scratch, or provide a valid adapter ID.
         prompt_keywords=keywords,
         caption_prefix="",
         resolution=512,

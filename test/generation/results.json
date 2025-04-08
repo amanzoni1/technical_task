@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "portrait of a beautiful woman with long dark hair against a sunset",
+    "full_prompt": "Super Realism, portrait of a beautiful woman with long dark hair against a sunset",
+    "image_path": "test_results/images/image_1_portrait_of_a_beautiful_woman_.png",
+    "response_time": 17.152068376541138
+  },
+  {
+    "prompt": "photo of a beautiful woman in a professional business suit in an office",
+    "full_prompt": "Super Realism, photo of a beautiful woman in a professional business suit in an office",
+    "image_path": "test_results/images/image_2_photo_of_a_beautiful_woman_in_.png",
+    "response_time": 16.847710847854614
+  },
+  {
+    "prompt": "casual photo of a beautiful woman enjoying a day at the beach",
+    "full_prompt": "Super Realism, casual photo of a beautiful woman enjoying a day at the beach",
+    "image_path": "test_results/images/image_3_casual_photo_of_a_beautiful_wo.png",
+    "response_time": 16.855565071105957
+  },
+  {
+    "prompt": "close-up portrait of a beautiful woman with a soft smile and elegant makeup",
+    "full_prompt": "Super Realism, close-up portrait of a beautiful woman with a soft smile and elegant makeup",
+    "image_path": "test_results/images/image_4_close-up_portrait_of_a_beautif.png",
+    "response_time": 16.96529531478882
+  },
+  {
+    "prompt": "artistic photo of a beautiful woman in a vintage dress with a scenic background",
+    "full_prompt": "Super Realism, artistic photo of a beautiful woman in a vintage dress with a scenic background",
+    "image_path": "test_results/images/image_5_artistic_photo_of_a_beautiful_.png",
+    "response_time": 17.024250268936157
+  }
+]

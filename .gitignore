@@ -3,10 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-test/generation/images
-test/generation/result*
-test/generation/test_generation.txt
-reqo.txt
 
 # Virtual environments
 venv/

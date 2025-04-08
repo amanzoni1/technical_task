@@ -1,0 +1,45 @@
+===== TESTING IMAGE GENERATION ENDPOINT =====
+
+
+Generating image 1/5:
+  • Prompt: 'portrait of a beautiful woman with long dark hair against a sunset'
+  • Image saved to test_results/images/image_1_portrait_of_a_beautiful_woman_.png
+  • Full prompt used: Super Realism, portrait of a beautiful woman with long dark hair against a sunset
+  • Response time: 17.15s
+
+Generating image 2/5:
+  • Prompt: 'photo of a beautiful woman in a professional business suit in an office'
+  • Image saved to test_results/images/image_2_photo_of_a_beautiful_woman_in_.png
+  • Full prompt used: Super Realism, photo of a beautiful woman in a professional business suit in an office
+  • Response time: 16.85s
+
+Generating image 3/5:
+  • Prompt: 'casual photo of a beautiful woman enjoying a day at the beach'
+  • Image saved to test_results/images/image_3_casual_photo_of_a_beautiful_wo.png
+  • Full prompt used: Super Realism, casual photo of a beautiful woman enjoying a day at the beach
+  • Response time: 16.86s
+
+Generating image 4/5:
+  • Prompt: 'close-up portrait of a beautiful woman with a soft smile and elegant makeup'
+  • Image saved to test_results/images/image_4_close-up_portrait_of_a_beautif.png
+  • Full prompt used: Super Realism, close-up portrait of a beautiful woman with a soft smile and elegant makeup
+  • Response time: 16.97s
+
+Generating image 5/5:
+  • Prompt: 'artistic photo of a beautiful woman in a vintage dress with a scenic background'
+  • Image saved to test_results/images/image_5_artistic_photo_of_a_beautiful_.png
+  • Full prompt used: Super Realism, artistic photo of a beautiful woman in a vintage dress with a scenic background
+  • Response time: 17.02s
+
+Image generation results saved to test_results/images/results.json
+
+===== IMAGE GENERATION TEST SUMMARY =====
+
+Image Generation Results:
+  • Images generated: 5/5
+  • Average generation time: 16.97s
+  • Image 1: test_results/images/image_1_portrait_of_a_beautiful_woman_.png (17.15s)
+  • Image 2: test_results/images/image_2_photo_of_a_beautiful_woman_in_.png (16.85s)
+  • Image 3: test_results/images/image_3_casual_photo_of_a_beautiful_wo.png (16.86s)
+  • Image 4: test_results/images/image_4_close-up_portrait_of_a_beautif.png (16.97s)
+  • Image 5: test_results/images/image_5_artistic_photo_of_a_beautiful_.png (17.02s)
