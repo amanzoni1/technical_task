@@ -9,12 +9,12 @@ def train_lora_model(dataset_dir, output_dir, keywords):
     Trains a LoRA model
 
     Args:
-        dataset_dir (str): Directory containing training images
-        output_dir (str): Directory to save trained model
-        keywords (list): List of keywords/captions for the images
+        dataset_dir (str): Directory containing training images.
+        output_dir (str): Directory to save the trained model.
+        keywords (list): List of keywords/captions for the images.
 
     Returns:
-        bool: True if training successful, False otherwise
+        bool: True if training successful, False otherwise.
     """
     try:
         # Find all image files
@@ -47,8 +47,8 @@ def train_lora_model(dataset_dir, output_dir, keywords):
                 f.write(json.dumps(entry) + "\n")
 
         # Define the training settings
-        base_model_id = "black-forest-labs/FLUX.1-dev"
-        lora_model_id = "strangerzonehf/Flux-Super-Realism-LoRA"
+        base_model_id = "stabilityai/stable-diffusion-3.5-large"
+        lora_model_id = "prithivMLmods/SD3.5-Large-Photorealistic-LoRA"
 
         # Construct the absolute path for the training script
         script_path = os.path.join(
@@ -69,7 +69,7 @@ def train_lora_model(dataset_dir, output_dir, keywords):
             "fp16",
             script_path,
             f"--pretrained_model_name_or_path={base_model_id}",
-            f"--lora_model_path={lora_model_id}",  # Start from checkpoint
+            # f"--resume_from_checkpoint={lora_model_id}",  #  checkpoint
             f"--train_data_dir={dataset_dir}",
             f"--output_dir={output_dir}",
             f"--resolution=512",
@@ -78,9 +78,8 @@ def train_lora_model(dataset_dir, output_dir, keywords):
             f"--max_train_steps=5",
             f"--learning_rate=1e-4",
             f"--lr_scheduler=constant",
-            f"--lora_rank=16",
-            f"--lora_alpha=32",
             f"--seed=42",
+            f"--rank=16", # LoRA rank
             "--center_crop",
             "--validation_prompt=High quality image generation",
             "--num_validation_images=1",
