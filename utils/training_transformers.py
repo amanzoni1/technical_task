@@ -3,7 +3,8 @@ import zipfile
 import torch
 from diffusers import (
     DiffusionPipeline,
-    FluxTransformer2DModel,  # Use FluxTransformer2DModel from Flux.
+    FluxTransformer2DModel,
+    DDPMScheduler,
     FlowMatchEulerDiscreteScheduler,
 )
 from transformers import CLIPTokenizer, CLIPTextModel
@@ -105,22 +106,18 @@ def prepare_dataset(
             print(f"Error loading image {img_path}: {e}")
             continue
 
-        # Resize the image
         img = img.resize((resolution, resolution))
-        # Convert image to a tensor and normalize to [-1, 1]
         tensor = torch.tensor(list(img.getdata()), dtype=torch.float32).reshape(
             resolution, resolution, 3
         )
-        tensor = (tensor / 127.5) - 1.0  # Normalize
-        tensor = tensor.permute(2, 0, 1)  # (C, H, W)
-        # Force conversion to tensor (should already be one)
+        tensor = (tensor / 127.5) - 1.0
+        tensor = tensor.permute(2, 0, 1)
         tensor = torch.tensor(tensor, dtype=torch.float32)
 
         images.append(img)
         captions.append(caption)
         pixel_values.append(tensor)
 
-    # Save metadata for debugging.
     meta_path = os.path.join(extraction_dir, "metadata.jsonl")
     with open(meta_path, "w") as f:
         for img_path in image_files:
@@ -184,7 +181,6 @@ def train_lora(dataset_zip_path, output_dir, config):
             resolution=config.resolution,
             caption_prefix=config.caption_prefix,
         )
-        # Ensure pixel_values are tensors
         dataset_dict["pixel_values"] = [
             torch.tensor(x, dtype=torch.float32) for x in dataset_dict["pixel_values"]
         ]
@@ -192,7 +188,6 @@ def train_lora(dataset_zip_path, output_dir, config):
         if "image" in dataset.column_names:
             dataset = dataset.remove_columns(["image"])
 
-        # Load base model components from the Flux repository.
         tokenizer = CLIPTokenizer.from_pretrained(
             config.base_model_id, subfolder="tokenizer"
         )
@@ -206,7 +201,6 @@ def train_lora(dataset_zip_path, output_dir, config):
             config.base_model_id, subfolder="scheduler"
         )
 
-        # Optionally, load from an existing LoRA adapter.
         if config.lora_model_id:
             pipeline = DiffusionPipeline.from_pretrained(
                 config.base_model_id, torch_dtype=torch.float16
@@ -218,16 +212,10 @@ def train_lora(dataset_zip_path, output_dir, config):
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # Configure and apply LoRA to the Flux model.
         lora_config = LoraConfig(
             r=config.lora_rank,
             lora_alpha=config.lora_rank,
-            target_modules=[
-                "to_q",
-                "to_k",
-                "to_v",
-                "to_out.0",
-            ],  # Adjust based on Flux architecture.
+            target_modules=["to_q", "to_k", "to_v", "to_out.0"],
             lora_dropout=0.1,
         )
         flux_model = get_peft_model(flux_model, lora_config)
@@ -259,7 +247,7 @@ def train_lora(dataset_zip_path, output_dir, config):
                 if global_step >= config.max_train_steps:
                     break
 
-                # Cast pixel_values to FP16 here.
+                # Cast pixel_values to FP16.
                 pixel_values = batch["pixel_values"].to(device, dtype=torch.float16)
                 text_inputs = tokenizer(
                     batch["text"],
@@ -269,7 +257,6 @@ def train_lora(dataset_zip_path, output_dir, config):
                     return_tensors="pt",
                 ).to(device)
                 with torch.no_grad():
-                    # Cast text encoder output to FP16.
                     encoder_hidden_states = text_encoder(text_inputs.input_ids)[0].to(
                         device, dtype=torch.float16
                     )
@@ -287,13 +274,18 @@ def train_lora(dataset_zip_path, output_dir, config):
                     (batch_size,),
                     device=device,
                 )
-                sigma_t = noise_scheduler._sigma(timesteps)[:, None, None, None]
+                # Compute sigma_t manually (linear schedule)
+                sigma_t = noise_scheduler.config.base_shift + (
+                    timesteps.float() / noise_scheduler.config.num_train_timesteps
+                ) * (
+                    noise_scheduler.config.max_shift - noise_scheduler.config.base_shift
+                )
+                sigma_t = sigma_t[:, None, None, None].to(device, dtype=torch.float16)
                 noisy_latents = latents + noise * sigma_t
 
-                # Forward pass using the Flux model.
                 noise_pred = flux_model(
                     noisy_latents, timesteps, encoder_hidden_states
-                ).sample
+                ).sample.to(device, dtype=torch.float16)
                 loss = F.mse_loss(noise_pred, noise)
 
                 loss.backward()
