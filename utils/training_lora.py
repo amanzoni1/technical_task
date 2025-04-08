@@ -1,4 +1,3 @@
-# utils/training_utils.py
 import os
 import glob
 import json
@@ -7,7 +6,15 @@ import subprocess
 
 def train_lora_model(dataset_dir, output_dir, keywords):
     """
-    Trains a LoRA model using the diffusers library
+    Trains a LoRA model
+
+    Args:
+        dataset_dir (str): Directory containing training images
+        output_dir (str): Directory to save trained model
+        keywords (list): List of keywords/captions for the images
+
+    Returns:
+        bool: True if training successful, False otherwise
     """
     try:
         # Find all image files
@@ -45,7 +52,7 @@ def train_lora_model(dataset_dir, output_dir, keywords):
 
         # Construct the absolute path for the training script
         script_path = os.path.join(
-            "/home/ubuntu/technical_task", "train_text_to_image_lora.py"
+            "/home/ubuntu/technical_task/utils", "train_text_to_image_lora.py"
         )
 
         # Construct training command
@@ -69,7 +76,8 @@ def train_lora_model(dataset_dir, output_dir, keywords):
             f"--lora_alpha=32",
             f"--seed=42",
             "--center_crop",
-            "--no_validation",
+            "--validation_prompt=High quality image generation",
+            "--num_validation_images=1",
         ]
 
         # Run the training process
