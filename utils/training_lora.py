@@ -59,6 +59,12 @@ def train_lora_model(dataset_dir, output_dir, keywords):
         cmd = [
             "accelerate",
             "launch",
+            "--num_processes",
+            "1",
+            "--num_machines",
+            "1",
+            "--dynamo_backend",
+            "no",
             "--mixed_precision",
             "fp16",
             script_path,

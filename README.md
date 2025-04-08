@@ -34,8 +34,6 @@ For this component, I implemented an endpoint that generates high-quality images
 
 The second task involves creating an API to train models with custom datasets and keywords. This component will be implemented to allow custom fine-tuning of the image generation model based on user-specified data.
 
-The training job is initiated asynchronously, immediately returning a job ID, while the actual training runs in the background (handled via utilities in the utils/ directory).
-
 ### 3. Prompt Classification API
 
 For the prompt classification task, I initially tried a zero-shot classification approach but found that it struggled with ambiguous prompts. To address this, I fine-tuned a BART model specifically for distinguishing between image requests and casual conversation.
@@ -63,15 +61,3 @@ Evaluation results: {
 ```
 
 After more testing with various prompts, the classifier has proven to be quite accurate. Seems that only a few ambiguous cases remain that may create doubts or lead to misclassification.
-
-ssh -i /Users/andreamanzoni/Desktop/code/lambda-ssh.pem ubuntu@209.20.158.250
-
-git clone <your-repo-url>
-cd <your-repo-directory>
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-huggingface-cli login
-
-uvicorn main:app --host 0.0.0.0 --port 8000
