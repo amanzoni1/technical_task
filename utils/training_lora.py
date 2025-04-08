@@ -47,7 +47,7 @@ def train_lora_model(dataset_dir, output_dir, keywords):
                 f.write(json.dumps(entry) + "\n")
 
         # Define the training settings
-        base_model_id = "stabilityai/stable-diffusion-3.5-large"
+        base_model_id = "runwayml/stable-diffusion-v1-5"
         lora_model_id = "prithivMLmods/SD3.5-Large-Photorealistic-LoRA"
 
         # Construct the absolute path for the training script
@@ -55,7 +55,7 @@ def train_lora_model(dataset_dir, output_dir, keywords):
             "/home/ubuntu/technical_task/utils", "train_text_to_image_lora.py"
         )
 
-        # Construct training command
+        # Construct training command..
         cmd = [
             "accelerate",
             "launch",
@@ -66,10 +66,11 @@ def train_lora_model(dataset_dir, output_dir, keywords):
             "--dynamo_backend",
             "no",
             "--mixed_precision",
-            "fp16",
+            "bf16",
             script_path,
             f"--pretrained_model_name_or_path={base_model_id}",
-            # f"--resume_from_checkpoint={lora_model_id}",  #  checkpoint
+            # Uncomment below if you want to resume from an adapter checkpoint:
+            # f"--resume_from_checkpoint={lora_model_id}",
             f"--train_data_dir={dataset_dir}",
             f"--output_dir={output_dir}",
             f"--resolution=512",
@@ -79,7 +80,7 @@ def train_lora_model(dataset_dir, output_dir, keywords):
             f"--learning_rate=1e-4",
             f"--lr_scheduler=constant",
             f"--seed=42",
-            f"--rank=16", # LoRA rank
+            f"--rank=16",  # LoRA rank
             "--center_crop",
             "--validation_prompt=High quality image generation",
             "--num_validation_images=1",

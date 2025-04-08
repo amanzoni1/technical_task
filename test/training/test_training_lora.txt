@@ -1,0 +1,150 @@
+
+===== TESTING TRAINING ENDPOINT =====
+
+Creating test dataset...
+Created test dataset with 3 images
+Sending training request to http://localhost:8000/train/
+Keywords: ['realistic', 'detailed', 'high quality']
+Training request successful!
+Model ID: lora_1744110621
+
+Monitoring training status...
+Poll 1: Status = in_progress
+Poll 2: Status = in_progress
+Poll 3: Status = in_progress
+Poll 4: Status = in_progress
+Poll 5: Status = complete
+
+Training completed successfully!
+
+
+
+=============================================
+
+/home/ubuntu/technical_task/venv/lib/python3.10/site-packages/accelerate/accelerator.py:506: UserWarning: `log_with=tensorboard` was passed but no supported trackers are currently installed.
+  warnings.warn(f"`log_with={log_with}` was passed but no supported trackers are currently installed.")
+04/08/2025 11:10:32 - INFO - __main__ - Distributed environment: NO
+Num processes: 1
+Process index: 0
+Local process index: 0
+Device: cuda
+
+Mixed precision type: bf16
+
+{'clip_sample_range', 'thresholding', 'timestep_spacing', 'rescale_betas_zero_snr', 'sample_max_value', 'prediction_type', 'dynamic_thresholding_ratio', 'variance_type'} was not found in config. Values will be initialized to default values.
+{'use_post_quant_conv', 'latents_std', 'scaling_factor', 'mid_block_add_attention', 'use_quant_conv', 'shift_factor', 'force_upcast', 'latents_mean'} was not found in config. Values will be initialized to default values.
+All model checkpoint weights were used when initializing AutoencoderKL.
+
+All the weights of AutoencoderKL were initialized from the model checkpoint at runwayml/stable-diffusion-v1-5.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use AutoencoderKL for predictions without further training.
+{'attention_type', 'addition_embed_type_num_heads', 'addition_time_embed_dim', 'dual_cross_attention', 'cross_attention_norm', 'conv_in_kernel', 'transformer_layers_per_block', 'only_cross_attention', 'mid_block_only_cross_attention', 'use_linear_projection', 'dropout', 'resnet_skip_time_act', 'resnet_out_scale_factor', 'upcast_attention', 'time_cond_proj_dim', 'addition_embed_type', 'encoder_hid_dim', 'projection_class_embeddings_input_dim', 'timestep_post_act', 'class_embeddings_concat', 'time_embedding_type', 'resnet_time_scale_shift', 'mid_block_type', 'num_attention_heads', 'class_embed_type', 'time_embedding_dim', 'num_class_embeds', 'time_embedding_act_fn', 'conv_out_kernel', 'encoder_hid_dim_type', 'reverse_transformer_layers_per_block'} was not found in config. Values will be initialized to default values.
+All model checkpoint weights were used when initializing UNet2DConditionModel.
+
+All the weights of UNet2DConditionModel were initialized from the model checkpoint at runwayml/stable-diffusion-v1-5.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use UNet2DConditionModel for predictions without further training.
+
+Generating train split: 0 examples [00:00, ? examples/s]
+Generating train split: 3 examples [00:00, 638.73 examples/s]
+04/08/2025 11:10:39 - INFO - __main__ - ***** Running training *****
+04/08/2025 11:10:39 - INFO - __main__ -   Num examples = 3
+04/08/2025 11:10:39 - INFO - __main__ -   Num Epochs = 2
+04/08/2025 11:10:39 - INFO - __main__ -   Instantaneous batch size per device = 1
+04/08/2025 11:10:39 - INFO - __main__ -   Total train batch size (w. parallel, distributed & accumulation) = 1
+04/08/2025 11:10:39 - INFO - __main__ -   Gradient Accumulation steps = 1
+04/08/2025 11:10:39 - INFO - __main__ -   Total optimization steps = 5
+
+Steps:   0%|          | 0/5 [00:00<?, ?it/s]
+Steps:  20%|██        | 1/5 [00:01<00:04,  1.05s/it]
+Steps:  20%|██        | 1/5 [00:01<00:04,  1.05s/it, lr=0.0001, step_loss=0.758]
+Steps:  40%|████      | 2/5 [00:01<00:01,  1.91it/s, lr=0.0001, step_loss=0.758]
+Steps:  40%|████      | 2/5 [00:01<00:01,  1.91it/s, lr=0.0001, step_loss=0.0367]
+Steps:  60%|██████    | 3/5 [00:01<00:00,  2.84it/s, lr=0.0001, step_loss=0.0367]
+Steps:  60%|██████    | 3/5 [00:01<00:00,  2.84it/s, lr=0.0001, step_loss=0.543]
+
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]
+Fetching 13 files:   8%|▊         | 1/13 [00:00<00:03,  3.57it/s]
+Fetching 13 files:  23%|██▎       | 3/13 [00:00<00:01,  5.52it/s]
+Fetching 13 files: 100%|██████████| 13/13 [00:06<00:00,  2.02it/s]
+{'requires_safety_checker', 'image_encoder'} was not found in config. Values will be initialized to default values.
+
+                                                                     Instantiating AutoencoderKL model under default dtype torch.bfloat16.nts...:   0%|          | 0/7 [00:00<?, ?it/s]
+{'use_post_quant_conv', 'latents_std', 'scaling_factor', 'mid_block_add_attention', 'use_quant_conv', 'shift_factor', 'force_upcast', 'latents_mean'} was not found in config. Values will be initialized to default values.
+All model checkpoint weights were used when initializing AutoencoderKL.
+
+All the weights of AutoencoderKL were initialized from the model checkpoint at /home/ubuntu/.cache/huggingface/hub/models--runwayml--stable-diffusion-v1-5/snapshots/451f4fe16113bff5a5d2269ed5ad43b0592e9a14/vae.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use AutoencoderKL for predictions without further training.
+Loaded vae as AutoencoderKL from `vae` subfolder of runwayml/stable-diffusion-v1-5.
+
+                                                                             Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of runwayml/stable-diffusion-v1-5.
+
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of runwayml/stable-diffusion-v1-5.
+{'timestep_spacing', 'prediction_type'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of runwayml/stable-diffusion-v1-5.
+Loaded tokenizer as CLIPTokenizer from `tokenizer` subfolder of runwayml/stable-diffusion-v1-5.
+Loaded text_encoder as CLIPTextModel from `text_encoder` subfolder of runwayml/stable-diffusion-v1-5.
+
+
+Loading pipeline components...: 100%|██████████| 7/7 [00:01<00:00,  5.49it/s]
+04/08/2025 11:10:49 - INFO - __main__ - Running validation...
+ Generating 1 images with prompt: High quality image generation.
+
+Steps:  80%|████████  | 4/5 [00:12<00:04,  4.75s/it, lr=0.0001, step_loss=0.543]
+Steps:  80%|████████  | 4/5 [00:12<00:04,  4.75s/it, lr=0.0001, step_loss=0.014]
+Steps: 100%|██████████| 5/5 [00:13<00:00,  3.10s/it, lr=0.0001, step_loss=0.014]
+Steps: 100%|██████████| 5/5 [00:13<00:00,  3.10s/it, lr=0.0001, step_loss=0.0111]{'requires_safety_checker', 'image_encoder'} was not found in config. Values will be initialized to default values.
+
+                                                                     Instantiating AutoencoderKL model under default dtype torch.bfloat16.nts...:   0%|          | 0/7 [00:00<?, ?it/s]
+{'use_post_quant_conv', 'latents_std', 'scaling_factor', 'mid_block_add_attention', 'use_quant_conv', 'shift_factor', 'force_upcast', 'latents_mean'} was not found in config. Values will be initialized to default values.
+All model checkpoint weights were used when initializing AutoencoderKL.
+
+All the weights of AutoencoderKL were initialized from the model checkpoint at /home/ubuntu/.cache/huggingface/hub/models--runwayml--stable-diffusion-v1-5/snapshots/451f4fe16113bff5a5d2269ed5ad43b0592e9a14/vae.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use AutoencoderKL for predictions without further training.
+Loaded vae as AutoencoderKL from `vae` subfolder of runwayml/stable-diffusion-v1-5.
+
+                                                                             Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of runwayml/stable-diffusion-v1-5.
+
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of runwayml/stable-diffusion-v1-5.
+{'timestep_spacing', 'prediction_type'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of runwayml/stable-diffusion-v1-5.
+Loaded tokenizer as CLIPTokenizer from `tokenizer` subfolder of runwayml/stable-diffusion-v1-5.
+Loaded text_encoder as CLIPTextModel from `text_encoder` subfolder of runwayml/stable-diffusion-v1-5.
+
+
+Loading pipeline components...: 100%|██████████| 7/7 [00:01<00:00,  6.83it/s]
+04/08/2025 11:10:54 - INFO - __main__ - Running validation...
+ Generating 1 images with prompt: High quality image generation.
+Model weights saved in storage/trained_models/lora_1744110621/pytorch_lora_weights.safetensors
+{'requires_safety_checker', 'image_encoder'} was not found in config. Values will be initialized to default values.
+
+                                                                     Instantiating AutoencoderKL model under default dtype torch.bfloat16.nts...:   0%|          | 0/7 [00:00<?, ?it/s]
+{'use_post_quant_conv', 'latents_std', 'scaling_factor', 'mid_block_add_attention', 'use_quant_conv', 'shift_factor', 'force_upcast', 'latents_mean'} was not found in config. Values will be initialized to default values.
+All model checkpoint weights were used when initializing AutoencoderKL.
+
+All the weights of AutoencoderKL were initialized from the model checkpoint at /home/ubuntu/.cache/huggingface/hub/models--runwayml--stable-diffusion-v1-5/snapshots/451f4fe16113bff5a5d2269ed5ad43b0592e9a14/vae.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use AutoencoderKL for predictions without further training.
+Loaded vae as AutoencoderKL from `vae` subfolder of runwayml/stable-diffusion-v1-5.
+
+                                                                             Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of runwayml/stable-diffusion-v1-5.
+
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of runwayml/stable-diffusion-v1-5.
+{'timestep_spacing', 'prediction_type'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of runwayml/stable-diffusion-v1-5.
+Loaded tokenizer as CLIPTokenizer from `tokenizer` subfolder of runwayml/stable-diffusion-v1-5.
+Loaded text_encoder as CLIPTextModel from `text_encoder` subfolder of runwayml/stable-diffusion-v1-5.
+
+                                                                             Instantiating UNet2DConditionModel model under default dtype torch.bfloat16.██████▌ | 6/7 [00:01<00:00,  6.87it/s]
+{'attention_type', 'addition_embed_type_num_heads', 'addition_time_embed_dim', 'dual_cross_attention', 'cross_attention_norm', 'conv_in_kernel', 'transformer_layers_per_block', 'only_cross_attention', 'mid_block_only_cross_attention', 'use_linear_projection', 'dropout', 'resnet_skip_time_act', 'resnet_out_scale_factor', 'upcast_attention', 'time_cond_proj_dim', 'addition_embed_type', 'encoder_hid_dim', 'projection_class_embeddings_input_dim', 'timestep_post_act', 'class_embeddings_concat', 'time_embedding_type', 'resnet_time_scale_shift', 'mid_block_type', 'num_attention_heads', 'class_embed_type', 'time_embedding_dim', 'num_class_embeds', 'time_embedding_act_fn', 'conv_out_kernel', 'encoder_hid_dim_type', 'reverse_transformer_layers_per_block'} was not found in config. Values will be initialized to default values.
+All model checkpoint weights were used when initializing UNet2DConditionModel.
+
+All the weights of UNet2DConditionModel were initialized from the model checkpoint at /home/ubuntu/.cache/huggingface/hub/models--runwayml--stable-diffusion-v1-5/snapshots/451f4fe16113bff5a5d2269ed5ad43b0592e9a14/unet.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use UNet2DConditionModel for predictions without further training.
+Loaded unet as UNet2DConditionModel from `unet` subfolder of runwayml/stable-diffusion-v1-5.
+
+
+Loading pipeline components...: 100%|██████████| 7/7 [00:02<00:00,  2.64it/s]
+Loading unet.
+No LoRA keys associated to CLIPTextModel found with the prefix='text_encoder'. This is safe to ignore if LoRA state dict didn't originally have any CLIPTextModel related params. You can also try specifying `prefix=None` to resolve the warning. Otherwise, open an issue if you think it's unexpected: https://github.com/huggingface/diffusers/issues/new
+04/08/2025 11:11:00 - INFO - __main__ - Running validation...
+ Generating 1 images with prompt: High quality image generation.
+
+Steps: 100%|██████████| 5/5 [00:23<00:00,  4.65s/it, lr=0.0001, step_loss=0.0111]
