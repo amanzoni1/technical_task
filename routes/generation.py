@@ -1,7 +1,7 @@
 import io
 import base64
 import torch
-from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
+from diffusers import DiffusionPipeline
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 

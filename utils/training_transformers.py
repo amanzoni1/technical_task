@@ -116,25 +116,43 @@ class SimpleFluxTrainer(Trainer):
         self.text_encoder = text_encoder
         self.tokenizer = tokenizer
 
-    def compute_loss(self, model, inputs, return_outputs=False):
+    def _remove_unused_columns(self, dataset, description: str = None):
+        # Override to keep all columns (including "text" and "pixel_values")
+        return dataset
+
+    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        if "text" not in inputs:
+            print(f"Warning: 'text' key missing from inputs. Available keys: {list(inputs.keys())}")
+            # Fall back to a default caption if needed
+            inputs["text"] = ["a photo"] * inputs["pixel_values"].shape[0]
+
         # Get text encodings
-        text_inputs = self.tokenizer(
+        text_encoding = self.tokenizer(
             inputs["text"],
             padding="max_length",
             max_length=self.tokenizer.model_max_length,
             truncation=True,
             return_tensors="pt",
-        ).to(self.model.device)
+        )
+        text_inputs = {k: v.to(self.model.device) for k, v in text_encoding.items()}
 
         with torch.no_grad():
-            encoder_hidden_states = self.text_encoder(text_inputs.input_ids)[0]
+            encoder_hidden_states = self.text_encoder(text_inputs["input_ids"])[0]
 
         # Get image tensors
         pixel_values = inputs["pixel_values"].to(self.model.device)
 
         # Sample noise and timesteps
         batch_size = pixel_values.shape[0]
-        noise = torch.randn_like(pixel_values)
+        resolution = pixel_values.shape[2]
+
+        # Create latents with proper dimensions for FLUX (64 channels)
+        latents = torch.randn(
+            (batch_size, 64, resolution // 8, resolution // 8),
+            device=self.model.device,
+        )
+        noise = torch.randn_like(latents)
+
         timesteps = torch.randint(
             0,
             self.noise_scheduler.config.num_train_timesteps,
@@ -150,10 +168,10 @@ class SimpleFluxTrainer(Trainer):
             - self.noise_scheduler.config.base_shift
         )
         sigma_t = sigma_t[:, None, None, None]
-        noisy_images = pixel_values + noise * sigma_t
+        noisy_latents = latents + noise * sigma_t
 
         # Predict noise
-        noise_pred = model(noisy_images, timesteps, encoder_hidden_states).sample
+        noise_pred = model(noisy_latents, timesteps, encoder_hidden_states).sample
 
         # Calculate loss
         loss = F.mse_loss(noise_pred, noise)
@@ -216,6 +234,11 @@ def train_lora_model(dataset_dir, output_dir, keywords):
             config.base_model_id, subfolder="scheduler"
         )
 
+        # Determine the device and move models accordingly
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        text_encoder = text_encoder.to(device)
+        flux_model = flux_model.to(device)
+
         # Apply LoRA
         lora_config = LoraConfig(
             r=config.lora_rank,
@@ -237,6 +260,8 @@ def train_lora_model(dataset_dir, output_dir, keywords):
             save_steps=config.max_train_steps,
             logging_steps=1,
             remove_unused_columns=False,
+            report_to=[],
+            fp16=True,
         )
 
         # Create trainer
@@ -250,6 +275,7 @@ def train_lora_model(dataset_dir, output_dir, keywords):
         )
 
         # Train
+        torch.cuda.empty_cache()
         update_progress(output_dir, 0, config.max_train_steps, "training")
         trainer.train()
 

@@ -6,7 +6,7 @@ from typing import List
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 import json
-# from utils.training_lora import train_lora_model
+# from utils.training_diffusers import train_lora_model
 from utils.training_transformers import train_lora_model
 
 router = APIRouter()

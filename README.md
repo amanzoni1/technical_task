@@ -35,10 +35,11 @@ For this component, I implemented an endpoint that generates high-quality images
 This API accepts prompt keywords and a dataset (uploaded as a ZIP file) to fine-tune the image generation model.
 
 Two versions are implemented in the utils folder:
-- training_lora.py:
-A simpler training implementation using the Diffusers framework. This version is stable, although it may not provide the granularity of a full-from-scratch solution.
+
+- training_diffusers.py:
+  A simpler training implementation using the Diffusers framework. This version is stable, although it may not provide the granularity of a full-from-scratch solution.
 - training_transformers.py:
-A more complex, custom training loop implemented using Transformers. This approach aims to train all components from scratch but has proven more challenging in terms of memory and precision management.
+  A more complex, custom training loop implemented using Transformers. This approach aims to train all components from scratch but has proven more challenging in terms of memory and precision management.
 
 ### 3. Prompt Classification API
 
