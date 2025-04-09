@@ -37,13 +37,17 @@ This API accepts prompt keywords and a dataset (uploaded as a ZIP file) to fine-
 Two versions are implemented in the utils folder:
 
 - training_diffusers.py:
-  A simpler training implementation using the Diffusers framework. This version is stable, although it may not provide the granularity of a full-from-scratch solution.
+  A simpler training implementation using the Diffusers framework.
+  This version is working and leverages the train_text_to_image_lora.py file from the Diffusers GitHub repository.
 - training_transformers.py:
-  A more complex, custom training loop implemented using Transformers. This approach aims to train all components from scratch but has proven more challenging in terms of memory and precision management.
+  A more complex, custom training loop using Transformers.
+  Adapting many components was required, especially in building the compute_loss function—
+  to correctly handle data collation, precision/device management, and the hidden input
+  signature of PEFT-wrapped models. It’s not working yet.
 
 ### 3. Prompt Classification API
 
-For the prompt classification task, I initially tried a zero-shot classification approach but found that it struggled with ambiguous prompts. To address this, I fine-tuned a BART model specifically for distinguishing between image requests and casual conversation.
+For the prompt classification task, I initially tried a zero-shot classification approach but found that it struggled with ambiguous prompts. To address this, I fine-tuned a BART model (utils/finetune_classifier.py) specifically for distinguishing between image requests and casual conversation.
 
 **Fine-tuning process:**
 
