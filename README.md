@@ -4,8 +4,8 @@
 
 ### Important Note on Hardware Compatibility
 
-A GPU is required.
-This project has been developed and tested on NVIDIA H100 and A100 GPUs x86 architecture.
+A GPU is required.  
+This project has been developed and tested on NVIDIA H100 and A100 GPUs x86 architecture.  
 The current implementation is not compatible with ARM-based GPUs like GH200.
 
 ### Setup
@@ -50,10 +50,9 @@ There are two options for testing:
 
      The classification API distinguishes between the following classes:
 
-     - "request for visual content creation"`
-     - "conversational message"`
+       "request for visual content creation" and "conversational message"
 
-     - **Test training endpoint:**
+   - **Test training endpoint:**
 
      First, prepare a ZIP file of your dataset (for example, `test_dataset.zip`), then run:
 
