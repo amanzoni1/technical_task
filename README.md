@@ -1,5 +1,75 @@
 # Technical Tasks
 
+## Quick Start & Testing
+
+### Important Note on Hardware Compatibility
+
+A GPU is required.
+This project has been developed and tested on NVIDIA H100 GPUs x86 architecture.
+The current implementation is not compatible with ARM-based GPUs like GH200.
+
+### Setup
+
+Ensure you have an `.env` file in the base directory containing your Hugging Face token:
+
+```
+HF_TOKEN=${HF_TOKEN}
+```
+
+### Testing the Endpoints
+
+There are two options for testing:
+
+1. **Using Test Files:**
+   Run the test scripts available in the `test/` directory:
+
+   - `test/generation/test_generation.py`
+   - `test/training/test_training.py`
+   - `test/classification/test_classification.py`
+
+2. **Using cURL Commands:**
+   Examples:
+
+   - **Test image generation endpoint:**
+
+     ```
+     curl -X POST http://localhost:8000/generate/ \
+       -H "Content-Type: application/json" \
+       -d '{"prompt": "a beautiful woman"}' -o response.json
+     ```
+
+     This command sends a prompt to the `/generate/` endpoint and writes the JSON response (including the base64-encoded image) to `response.json`.
+
+   - **Test classification endpoint:**
+
+     ```
+     curl -X POST http://localhost:8000/classify/ \
+       -H "Content-Type: application/json" \
+       -d '{"prompt": "can I see you in the kitchen?"}'
+     ```
+
+     - **Test training endpoint:**
+
+     First, prepare a ZIP file of your dataset (for example, `test_dataset.zip`), then run:
+
+     ```
+     curl -X POST http://localhost:8000/train/ \
+       -F "dataset=@test_dataset.zip" \
+       -F 'keywords=["realistic", "detailed", "high quality"]'
+     ```
+
+     This command sends the training request with the uploaded dataset and keywords. The response will include a model identifier (`model_id`).
+
+     You can check the training status with:
+
+     ```
+     curl -X GET http://localhost:8000/train/status/<model_id>
+     ```
+
+     Replace `<model_id>` with the actual model ID returned from the training request.
+
+---
+
 ## Repository Structure
 
 - `main.py`: FastAPI application entry point
