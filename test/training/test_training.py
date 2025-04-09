@@ -80,6 +80,8 @@ def test_training_endpoint():
 
                     if current_status == "complete":
                         print("\nTraining completed successfully!")
+                        print("You can find the trained model, logs, and any error messages in the directory:")
+                        print(f"  storage/trained_models/{model_id}")
                         break
                     elif current_status == "failed":
                         print("\nTraining failed. Check server logs.")

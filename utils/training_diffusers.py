@@ -51,9 +51,7 @@ def train_lora_model(dataset_dir, output_dir, keywords):
         lora_model_id = "prithivMLmods/SD3.5-Large-Photorealistic-LoRA"
 
         # Construct the absolute path for the training script
-        script_path = os.path.join(
-            "/home/ubuntu/technical_task/utils", "train_text_to_image_lora.py"
-        )
+        script_path = os.path.join("/app/utils", "train_text_to_image_lora.py")
 
         # Construct training command..
         cmd = [
